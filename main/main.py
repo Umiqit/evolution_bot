@@ -1,5 +1,6 @@
 # main.ipynb
 
+import asyncio
 import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ConversationHandler
@@ -12,10 +13,10 @@ logger = logging.getLogger(__name__)
 
 from database import DataStorage, User, AchievementSystem
 from generator import ScenarioGenerator
-from bot_handlers import EvolutionBot, MAIN_MENU, SIMULATION_ACTIVE, WAITING_CHOICE
+from bot_handlers import EvolutionBot, MAIN_MENU, SIMULATION_ACTIVE, WAITING_CHOICE, SCENARIO_SELECT
 
-data_storage = DataStorage('../data/users.json')
-scenario_generator = ScenarioGenerator('../data/content_bank.json')
+data_storage = DataStorage('data/users.json')
+scenario_generator = ScenarioGenerator('data/content_bank.json')
 bot = EvolutionBot(data_storage, scenario_generator)
 
 TOKEN = "8523833913:AAHktN6-MBu_aq2x2mWL3OZWlUdd5VnbXkg"
@@ -44,6 +45,9 @@ def main():
                 CommandHandler('inventory', bot.inventory_command),
                 CallbackQueryHandler(bot.button_handler)
             ],
+            SCENARIO_SELECT: [
+                CallbackQueryHandler(bot.button_handler)
+            ],
         },
         fallbacks=[CommandHandler('start', bot.start)]
     )
@@ -55,6 +59,10 @@ def main():
     application.add_handler(CommandHandler('next', bot.next_command))
     
     print("Бот запущен...")
+    try:
+        asyncio.get_event_loop()
+    except RuntimeError:
+        asyncio.set_event_loop(asyncio.new_event_loop())
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == '__main__':

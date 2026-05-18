@@ -299,26 +299,23 @@ class EvolutionBot:
         query = update.callback_query
         
         all_scenarios = self.scenario_generator.get_all_scenarios()
-        completed = user.completed_scenarios
+        completed = set(user.completed_scenarios)
         
-        available = []
-        for s in all_scenarios:
-            if s.get('id') not in completed:
-                available.append(s)
-        
-        if not available:
-            text = "🎉 Вы прошли все доступные сценарии!\n\nСледите за обновлениями - скоро появятся новые."
+        if not all_scenarios:
+            text = "🎉 Сценарии недоступны. Попробуйте позже."
             buttons = [("🔙 В меню", "main_menu")]
             reply_markup = self.create_inline_keyboard(buttons)
             await query.edit_message_text(text, reply_markup=reply_markup)
             return MAIN_MENU
-        
+
         text = "🎮 Выберите сценарий для эволюции:\n\n"
         
         buttons = []
-        for s in available[:10]:
-            emoji = s.get('title', '')[0] if s.get('title') else '🌍'
-            buttons.append((f"{emoji} {s.get('title', 'Неизвестно')}", f"select_{s.get('id')}"))
+        for s in all_scenarios[:10]:
+            title = s.get('title', 'Неизвестно')
+            emoji = title[0] if title else '🌍'
+            suffix = " (пройден)" if s.get('id') in completed else ""
+            buttons.append((f"{emoji} {title}{suffix}", f"select_{s.get('id')}"))
         
         buttons.append(("🔙 В меню", "main_menu"))
         
